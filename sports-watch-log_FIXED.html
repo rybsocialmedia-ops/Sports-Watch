@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>COURT WATCH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --court-tan: #C8A96E;
+      --chalk: #F5F0E8;
+      --ink: #111111;
+      --accent: #E84C3D;
+      --steel: #2A2A2A;
+      --mid: #444444;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--ink);
+      color: var(--chalk);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 39px, rgba(255,255,255,0.03) 40px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 2;
+      padding: 36px 40px 20px;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      border-bottom: 1px solid rgba(200,169,110,0.2);
+    }
+
+    header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px;
+      letter-spacing: 4px;
+      color: var(--court-tan);
+      line-height: 1;
+    }
+
+    header .tagline {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--mid);
+      padding-bottom: 10px;
+    }
+
+    .accent-line {
+      width: 48px;
+      height: 4px;
+      background: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .app-body { position: relative; z-index: 1; }
+
+    /* ── VIEWING BOX ── */
+    .viewing-section {
+      background: var(--steel);
+      border-bottom: 2px solid var(--court-tan);
+      padding: 28px 40px;
+    }
+
+    .section-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: var(--court-tan);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(200,169,110,0.2);
+    }
+
+    .viewing-box {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .slot-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slot-controls {
+      height: 28px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(200,169,110,0.2);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slot-controls.empty {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .viewing-slot {
+      flex: 1;
+      min-width: 0;
+      height: 140px;
+      border: 2px dashed rgba(200,169,110,0.25);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: border-color 0.2s;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .viewing-slot.filled {
+      border-style: solid;
+      border-color: var(--court-tan);
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(200,169,110,0.4), 
+                  inset 0 0 20px rgba(200,169,110,0.1);
+    }
+
+    .viewing-slot.filled:hover .remove-hint { opacity: 1; }
+
+    .viewing-slot .slot-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: rgba(200,169,110,0.15);
+    }
+
+    .viewing-slot .slot-player-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+    .viewing-slot .slot-name {
+      position: absolute;
+      bottom: 0;
+      left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.85));
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--chalk);
+      text-align: center;
+      padding: 12px 4px 5px;
+    }
+
+    .notes-icon {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--court-tan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.2s;
+    }
+
+    .notes-icon:hover {
+      background: rgba(200,169,110,0.3);
+      transform: scale(1.1);
+    }
+
+    .notes-icon svg {
+      width: 12px;
+      height: 12px;
+      stroke: var(--court-tan);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .notes-icon.has-notes {
+      background: var(--court-tan);
+    }
+
+    .notes-icon.has-notes svg {
+      stroke: var(--ink);
+    }
+
+    /* ── WATCH LOG ── */
+    .log-section {
+      background: rgba(0,0,0,0.2);
+      border-bottom: 2px solid rgba(200,169,110,0.15);
+      padding: 28px 40px;
+    }
+
+    .log-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .log-empty {
+      grid-column: 1 / -1;
+      padding: 32px 0;
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--mid);
+    }
+
+    .log-card {
+      background: var(--steel);
+      border: 1px solid rgba(200,169,110,0.2);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .log-card:hover {
+      border-color: var(--court-tan);
+      background: rgba(200,169,110,0.05);
+    }
+
+    .log-card-img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: top center;
+      border: 2px solid rgba(200,169,110,0.3);
+    }
+
+    .log-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .log-card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: var(--chalk);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-card-team {
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--mid);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .log-card-remove {
+      width: 18px;
+      height: 18px;
+      background: rgba(232,76,61,0.8);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .log-card-remove:hover {
+      background: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .log-card-remove svg {
+      width: 9px;
+      height: 9px;
+      stroke: white;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    /* ── TEAMS SECTION ── */
+    .teams-section {
+      background: rgba(0,0,0,0.15);
+      border-bottom: 2px solid rgba(200,169,110,0.15);
+      padding: 28px 40px;
+    }
+
+    .teams-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(200,169,110,0.2);
+      padding-bottom: 12px;
+    }
+
+    .team-tab {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      background: none;
+      border: none;
+      color: var(--mid);
+      padding: 8px 16px;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+    }
+
+    .team-tab:hover {
+      color: var(--chalk);
+    }
+
+    .team-tab.active {
+      color: var(--court-tan);
+    }
+
+    .team-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--court-tan);
+    }
+
+    .team-content {
+      position: relative;
+    }
+
+    .team-panel {
+      display: none;
+    }
+
+    .team-panel.active {
+      display: block;
+    }
+
+    .team-roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .roster-empty {
+      grid-column: 1 / -1;
+      padding: 48px 0;
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--mid);
+    }
+
+    .team-player-card {
+      background: var(--steel);
+      border: 1px solid rgba(200,169,110,0.2);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: all 0.2s;
+      aspect-ratio: 2/3;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .team-player-card:hover {
+      border-color: var(--court-tan);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    .team-player-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+    .no-photo-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(200,169,110,0.1), rgba(200,169,110,0.05));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mid);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      letter-spacing: 2px;
+    }
+
+    .no-photo-placeholder::before {
+      content: '?';
+    }
+
+    .team-player-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9) 50%);
+      padding: 20px 8px 8px;
+    }
+
+    .team-player-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--chalk);
+      line-height: 1.1;
+    }
+
+    .team-player-position {
+      font-size: 8px;
+      letter-spacing: 1px;
+      color: var(--court-tan);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .team-player-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 20px;
+      height: 20px;
+      background: rgba(232,76,61,0.9);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s;
+      z-index: 3;
+    }
+
+    .team-player-card:hover .team-player-remove {
+      opacity: 1;
+    }
+
+    .team-player-remove:hover {
+      background: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .team-player-remove svg {
+      width: 10px;
+      height: 10px;
+      stroke: white;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    /* ── SEARCH ── */
+    .search-section { padding: 28px 40px 0; }
+
+    .search-wrap {
+      position: relative;
+      max-width: 480px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      stroke: var(--mid);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      pointer-events: none;
+    }
+
+    #searchInput {
+      width: 100%;
+      background: var(--steel);
+      border: 1px solid rgba(200,169,110,0.25);
+      border-radius: 6px;
+      padding: 12px 16px 12px 42px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--chalk);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #searchInput::placeholder { color: var(--mid); }
+    #searchInput:focus { border-color: var(--court-tan); }
+
+    .search-hint {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--mid);
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    /* ── POOL ── */
+    .pool-section { padding: 20px 40px 48px; }
+
+    .roster-counter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .counter-pips { display: flex; gap: 5px; }
+
+    .pip {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(200,169,110,0.2);
+      transition: background 0.2s;
+    }
+
+    .pip.active { background: var(--court-tan); }
+
+    .counter-text {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-left: 4px;
+    }
+
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+
+    .no-results {
+      grid-column: 1 / -1;
+      padding: 48px 0;
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 3px;
+      color: var(--mid);
+    }
+
+    .player-card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      aspect-ratio: 2/3;
+      background: var(--steel);
+      border: 2px solid transparent;
+    }
+
+    .player-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+
+    .player-card.selected { border-color: var(--court-tan); }
+
+    .player-card.selected::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(200,169,110,0.1);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .player-card.full-roster {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .player-card.full-roster:not(.selected) { filter: grayscale(1); }
+
+    .player-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+
+    .player-info {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9) 50%);
+      padding: 24px 8px 8px;
+      z-index: 1;
+    }
+
+    .player-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: var(--chalk);
+      line-height: 1.1;
+    }
+
+    .player-team {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--court-tan);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .check-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
+      background: var(--court-tan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .player-card.selected .check-badge {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .check-badge svg {
+      width: 12px;
+      height: 12px;
+      stroke: var(--ink);
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .card-actions {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 4;
+    }
+
+    .player-card:hover .card-actions {
+      opacity: 1;
+    }
+
+    .action-btn {
+      flex: 1;
+      height: 32px;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid var(--court-tan);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--court-tan);
+    }
+
+    .action-btn:hover {
+      background: var(--court-tan);
+      color: var(--ink);
+    }
+
+    .action-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+
+    .viewing-slot.pop { animation: pop 0.3s ease; }
+
+    .slot-remove-btn {
+      width: 22px;
+      height: 22px;
+      background: rgba(232,76,61,0.95);
+      border: 2px solid rgba(232,76,61,1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .slot-remove-btn:hover {
+      background: var(--accent);
+      border-color: white;
+      transform: scale(1.2);
+      box-shadow: 0 4px 12px rgba(232,76,61,0.6);
+    }
+
+    .slot-remove-btn svg {
+      width: 12px;
+      height: 12px;
+      stroke: white;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    /* ── NOTES MODAL ── */
+    .notes-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .notes-modal.active { display: flex; }
+
+    .notes-content {
+      background: var(--steel);
+      border: 2px solid var(--court-tan);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      padding: 24px;
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .notes-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--court-tan);
+    }
+
+    .notes-close {
+      background: none;
+      border: none;
+      color: var(--mid);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .notes-close:hover { color: var(--chalk); }
+
+    .notes-textarea {
+      width: 100%;
+      height: 200px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(200,169,110,0.3);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--chalk);
+      resize: none;
+      outline: none;
+    }
+
+    .notes-textarea::placeholder { color: var(--mid); }
+    .notes-textarea:focus { border-color: var(--court-tan); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="accent-line"></div>
+    <h1>COURT WATCH</h1>
+  </div>
+  <span class="tagline">Your personal viewing roster</span>
+</header>
+
+<div class="app-body">
+
+  <div class="viewing-section">
+    <div class="section-label">Viewing Box</div>
+    <div class="viewing-box" id="viewingBox">
+      <div class="slot-container">
+        <div class="viewing-slot" data-slot="0"><span class="slot-number">1</span></div>
+        <div class="slot-controls empty" id="controls-0"></div>
+      </div>
+      <div class="slot-container">
+        <div class="viewing-slot" data-slot="1"><span class="slot-number">2</span></div>
+        <div class="slot-controls empty" id="controls-1"></div>
+      </div>
+      <div class="slot-container">
+        <div class="viewing-slot" data-slot="2"><span class="slot-number">3</span></div>
+        <div class="slot-controls empty" id="controls-2"></div>
+      </div>
+      <div class="slot-container">
+        <div class="viewing-slot" data-slot="3"><span class="slot-number">4</span></div>
+        <div class="slot-controls empty" id="controls-3"></div>
+      </div>
+      <div class="slot-container">
+        <div class="viewing-slot" data-slot="4"><span class="slot-number">5</span></div>
+        <div class="slot-controls empty" id="controls-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WATCH LOG -->
+  <div class="log-section">
+    <div class="section-label">Watch Log</div>
+    <div class="log-grid" id="logGrid">
+      <div class="log-empty">No players logged yet — add players from the pool below</div>
+    </div>
+  </div>
+
+  <!-- TEAMS SECTION -->
+  <div class="teams-section">
+    <div class="section-label">Teams</div>
+    
+    <div class="teams-tabs">
+      <button class="team-tab active" data-team="celtics">Boston Celtics Roster</button>
+      <button class="team-tab" data-team="lakers">Los Angeles Lakers Roster</button>
+    </div>
+
+    <div class="team-content">
+      <div class="team-panel active" id="celtics-panel">
+        <div class="team-roster-grid" id="celticsRoster"></div>
+      </div>
+      
+      <div class="team-panel" id="lakers-panel">
+        <div class="team-roster-grid" id="lakersRoster"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-section">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by player or team..." autocomplete="off" />
+    </div>
+    <div class="search-hint" id="searchHint">Showing all players — type to filter</div>
+  </div>
+
+  <div class="pool-section">
+    <div class="section-label">Player Pool</div>
+
+    <div class="roster-counter">
+      <div class="counter-pips">
+        <div class="pip" id="pip0"></div>
+        <div class="pip" id="pip1"></div>
+        <div class="pip" id="pip2"></div>
+        <div class="pip" id="pip3"></div>
+        <div class="pip" id="pip4"></div>
+      </div>
+      <span class="counter-text" id="counterText">0 / 5 selected</span>
+    </div>
+
+    <div class="player-grid" id="playerGrid"></div>
+  </div>
+
+</div>
+
+<!-- NOTES MODAL -->
+<div class="notes-modal" id="notesModal">
+  <div class="notes-content">
+    <div class="notes-header">
+      <div class="notes-title" id="notesPlayerName">Player Notes</div>
+      <button class="notes-close" id="notesClose">×</button>
+    </div>
+    <textarea class="notes-textarea" id="notesTextarea" placeholder="Add notes here (date, stats, thoughts, etc.)..."></textarea>
+  </div>
+</div>
+
+<script>
+const PLAYERS = [
+  // Original 5
+  { nbaId: "1627759", name: "Jaylen Brown",           team: "Boston Celtics" },
+  { nbaId: "2544",    name: "LeBron James",           team: "Los Angeles Lakers" },
+  { nbaId: "201939",  name: "Stephen Curry",          team: "Golden State Warriors" },
+  { nbaId: "201142",  name: "Kevin Durant",           team: "Phoenix Suns" },
+  { nbaId: "1630595", name: "Cade Cunningham",        team: "Detroit Pistons" },
+  { nbaId: "1628983", name: "Shai Gilgeous-Alexander",team: "OKC Thunder" },
+  
+  // Your additions
+  { nbaId: "1628389", name: "Bam Adebayo",            team: "Miami Heat" },
+  { nbaId: "1629029", name: "Luka Doncic",            team: "Dallas Mavericks" },
+  { nbaId: "1630162", name: "Anthony Edwards",        team: "Minnesota Timberwolves" },
+
+  { nbaId: "1641705", name: "Victor Wembanyama",      team: "San Antonio Spurs" },
+  { nbaId: "201935",  name: "James Harden",           team: "LA Clippers" },
+  { nbaId: "1628369", name: "Jayson Tatum",           team: "Boston Celtics" },
+  { nbaId: "1631105", name: "Jalen Duren",            team: "Detroit Pistons" },
+  { nbaId: "1630578", name: "Alperen Sengun",         team: "Houston Rockets" },
+  { nbaId: "1627742", name: "Brandon Ingram",         team: "New Orleans Pelicans" },
+  { nbaId: "1630224", name: "Jalen Green",            team: "Houston Rockets" },
+  { nbaId: "1629630", name: "Ja Morant",              team: "Memphis Grizzlies" },
+  { nbaId: "1628374", name: "Lauri Markkanen",        team: "Utah Jazz" },
+  { nbaId: "1630178", name: "Tyrese Maxey",           team: "Philadelphia 76ers" },
+  { nbaId: "1629027", name: "Trae Young",             team: "Atlanta Hawks" },
+  
+  // FULL BOSTON CELTICS 2025-26 ROSTER (Post-Trade Deadline) - VERIFIED IDs ONLY
+  { nbaId: "1628401", name: "Derrick White",          team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "202696",  name: "Nikola Vucevic",         team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1630573", name: "Sam Hauser",             team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1630202", name: "Payton Pritchard",       team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1642864", name: "Hugo Gonzalez",          team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1631248", name: "Baylor Scheierman",      team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1630568", name: "Luka Garza",             team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1629674", name: "Neemias Queta",          team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1641775", name: "Jordan Walsh",           team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1642873", name: "Amari Williams",         team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1642917", name: "Max Shulga",             team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1631199", name: "Ron Harper Jr.",         team: "Boston Celtics" }, // VERIFIED
+  { nbaId: "1642910", name: "John Tonje",             team: "Boston Celtics" }, // VERIFIED
+  
+  // LOS ANGELES LAKERS 2025-26 ROSTER
+  { nbaId: "1629028", name: "Deandre Ayton",          team: "Los Angeles Lakers" }, // VERIFIED
+  { nbaId: "1641723", name: "Kobe Bufkin",            team: "Los Angeles Lakers" },
+  { nbaId: "1629029", name: "Luka Doncic",            team: "Los Angeles Lakers" }, // VERIFIED (already have)
+  { nbaId: "1629060", name: "Rui Hachimura",          team: "Los Angeles Lakers" },
+  { nbaId: "4397077", name: "Jaxson Hayes",           team: "Los Angeles Lakers" },
+  { nbaId: "1642355", name: "Bronny James",           team: "Los Angeles Lakers" },
+  { nbaId: "2544",    name: "LeBron James",           team: "Los Angeles Lakers" }, // VERIFIED (already have)
+  { nbaId: "203926",  name: "Luke Kennard",           team: "Los Angeles Lakers" },
+  { nbaId: "1628467", name: "Maxi Kleber",            team: "Los Angeles Lakers" },
+  { nbaId: "1642261", name: "Dalton Knecht",          team: "Los Angeles Lakers" },
+  { nbaId: "1631111", name: "Jake LaRavia",           team: "Los Angeles Lakers" },
+  { nbaId: "1642006", name: "Chris Manon",            team: "Los Angeles Lakers" },
+  { nbaId: "4066457", name: "Austin Reaves",          team: "Los Angeles Lakers" },
+  { nbaId: "203935",  name: "Marcus Smart",           team: "Los Angeles Lakers" },
+  { nbaId: "1641730", name: "Nick Smith Jr.",         team: "Los Angeles Lakers" },
+  { nbaId: "1642909", name: "Adou Thiero",            team: "Los Angeles Lakers" },
+  { nbaId: "4431695", name: "Drew Timme",             team: "Los Angeles Lakers" },
+  { nbaId: "1629020", name: "Jarred Vanderbilt",      team: "Los Angeles Lakers" }
+].map(p => ({
+  ...p,
+  id: p.name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+  img: p.nbaId ? `https://cdn.nba.com/headshots/nba/latest/1040x760/${p.nbaId}.png` : null
+}));
+
+let roster = [null, null, null, null, null];
+let searchQuery = '';
+let playerNotes = {}; // Store notes by slot index
+let watchLog = []; // Array of player IDs in watch log
+let teamRosters = {
+  celtics: [],
+  // Can add more teams later: lakers: [], warriors: [], etc.
+};
+
+const isSelected = id => roster.includes(id);
+const selectedCount = () => roster.filter(Boolean).length;
+const getPlayer = id => PLAYERS.find(p => p.id === id);
+
+function filteredPlayers() {
+  if (!searchQuery) return PLAYERS;
+  const q = searchQuery.toLowerCase();
+  return PLAYERS.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    p.team.toLowerCase().includes(q)
+  );
+}
+
+/* ── RENDER VIEWING BOX ── */
+function renderViewingBox() {
+  document.querySelectorAll('.viewing-slot').forEach((slot, i) => {
+    const playerId = roster[i];
+    const controlsBar = document.getElementById(`controls-${i}`);
+    
+    slot.innerHTML = '';
+    slot.className = 'viewing-slot';
+    
+    if (playerId) {
+      const p = getPlayer(playerId);
+      const hasNotes = playerNotes[i] && playerNotes[i].trim().length > 0;
+      slot.classList.add('filled');
+      
+      slot.innerHTML = `
+        <img class="slot-player-img" src="${p.img}" alt="${p.name}" />
+        <div class="slot-name">${p.name.split(' ').pop()}</div>
+        <div class="notes-icon ${hasNotes ? 'has-notes' : ''}" data-slot="${i}">
+          <svg viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+      `;
+      
+      // Populate controls bar
+      controlsBar.className = 'slot-controls';
+      controlsBar.innerHTML = `
+        <div class="slot-remove-btn" data-slot="${i}">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+      `;
+      
+      // Click card to open notes
+      slot.onclick = (e) => {
+        if (!e.target.closest('.notes-icon')) {
+          openNotesModal(i, p.name);
+        }
+      };
+      
+      // Click notes icon to open modal
+      const notesIcon = slot.querySelector('.notes-icon');
+      if (notesIcon) {
+        notesIcon.onclick = (e) => {
+          e.stopPropagation();
+          openNotesModal(i, p.name);
+        };
+      }
+
+      // Click X button to remove
+      const removeBtn = controlsBar.querySelector('.slot-remove-btn');
+      if (removeBtn) {
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          removeFromRoster(i);
+        };
+      }
+      
+    } else {
+      slot.innerHTML = `<span class="slot-number">${i + 1}</span>`;
+      slot.onclick = null;
+      controlsBar.className = 'slot-controls empty';
+      controlsBar.innerHTML = '';
+    }
+  });
+}
+
+/* ── RENDER TEAMS ── */
+function renderTeams() {
+  // Render Celtics roster
+  const celticsGrid = document.getElementById('celticsRoster');
+  celticsGrid.innerHTML = '';
+  
+  const celticsPlayers = PLAYERS.filter(p => p.team === "Boston Celtics");
+  
+  celticsPlayers.forEach(player => {
+    const inFavorites = isSelected(player.id);
+    const inLog = watchLog.includes(player.id);
+    const isFull = selectedCount() >= 5;
+    
+    const card = document.createElement('div');
+    card.className = 'team-player-card';
+    card.innerHTML = `
+      ${player.img ? `<img src="${player.img}" alt="${player.name}" />` : '<div class="no-photo-placeholder"></div>'}
+      <div class="team-player-info">
+        <div class="team-player-name">${player.name}</div>
+        <div class="team-player-position">Boston Celtics</div>
+      </div>
+      <div class="card-actions">
+        <button class="action-btn favorites-btn" data-action="favorites" title="Add to Favorites">
+          <svg viewBox="0 0 24 24" fill="${inFavorites ? 'var(--court-tan)' : 'none'}" stroke="currentColor">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+        <button class="action-btn log-btn" data-action="log" title="Add to Watch Log">
+          <svg viewBox="0 0 24 24" fill="${inLog ? 'var(--court-tan)' : 'none'}" stroke="currentColor">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    const favBtn = card.querySelector('[data-action="favorites"]');
+    favBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (inFavorites) {
+        removeById(player.id);
+      } else if (!isFull) {
+        addToRoster(player.id);
+      }
+      renderTeams();
+      renderPlayerGrid();
+    });
+
+    const logBtn = card.querySelector('[data-action="log"]');
+    logBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (inLog) {
+        const idx = watchLog.indexOf(player.id);
+        watchLog.splice(idx, 1);
+      } else {
+        watchLog.push(player.id);
+      }
+      renderWatchLog();
+      renderTeams();
+      renderPlayerGrid();
+    });
+
+    celticsGrid.appendChild(card);
+  });
+  
+  // Render Lakers roster
+  const lakersGrid = document.getElementById('lakersRoster');
+  lakersGrid.innerHTML = '';
+  
+  const lakersPlayers = PLAYERS.filter(p => p.team === "Los Angeles Lakers");
+  
+  lakersPlayers.forEach(player => {
+    const inFavorites = isSelected(player.id);
+    const inLog = watchLog.includes(player.id);
+    const isFull = selectedCount() >= 5;
+    
+    const card = document.createElement('div');
+    card.className = 'team-player-card';
+    card.innerHTML = `
+      ${player.img ? `<img src="${player.img}" alt="${player.name}" />` : '<div class="no-photo-placeholder"></div>'}
+      <div class="team-player-info">
+        <div class="team-player-name">${player.name}</div>
+        <div class="team-player-position">Los Angeles Lakers</div>
+      </div>
+      <div class="card-actions">
+        <button class="action-btn favorites-btn" data-action="favorites" title="Add to Favorites">
+          <svg viewBox="0 0 24 24" fill="${inFavorites ? 'var(--court-tan)' : 'none'}" stroke="currentColor">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+        <button class="action-btn log-btn" data-action="log" title="Add to Watch Log">
+          <svg viewBox="0 0 24 24" fill="${inLog ? 'var(--court-tan)' : 'none'}" stroke="currentColor">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    const favBtn = card.querySelector('[data-action="favorites"]');
+    favBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (inFavorites) {
+        removeById(player.id);
+      } else if (!isFull) {
+        addToRoster(player.id);
+      }
+      renderTeams();
+      renderPlayerGrid();
+    });
+
+    const logBtn = card.querySelector('[data-action="log"]');
+    logBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (inLog) {
+        const idx = watchLog.indexOf(player.id);
+        watchLog.splice(idx, 1);
+      } else {
+        watchLog.push(player.id);
+      }
+      renderWatchLog();
+      renderTeams();
+      renderPlayerGrid();
+    });
+
+    lakersGrid.appendChild(card);
+  });
+}
+
+/* ── RENDER WATCH LOG ── */
+function renderWatchLog() {
+  const grid = document.getElementById('logGrid');
+  
+  if (watchLog.length === 0) {
+    grid.innerHTML = '<div class="log-empty">No players logged yet — add players from the pool below</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  watchLog.forEach((playerId, index) => {
+    const player = getPlayer(playerId);
+    if (!player) return;
+
+    const card = document.createElement('div');
+    card.className = 'log-card';
+    card.innerHTML = `
+      <img class="log-card-img" src="${player.img}" alt="${player.name}" />
+      <div class="log-card-info">
+        <div class="log-card-name">${player.name}</div>
+        <div class="log-card-team">${player.team}</div>
+      </div>
+      <button class="log-card-remove">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    `;
+
+    const removeBtn = card.querySelector('.log-card-remove');
+    removeBtn.onclick = () => {
+      watchLog.splice(index, 1);
+      renderWatchLog();
+    };
+
+    grid.appendChild(card);
+  });
+}
+
+/* ── RENDER PLAYER GRID ── */
+function renderPlayerGrid() {
+  const grid = document.getElementById('playerGrid');
+  const isFull = selectedCount() >= 5;
+  const results = filteredPlayers();
+  grid.innerHTML = '';
+
+  if (results.length === 0) {
+    grid.innerHTML = `<div class="no-results">No players found</div>`;
+  } else {
+    results.forEach(player => {
+      const sel = isSelected(player.id);
+      const inLog = watchLog.includes(player.id);
+      
+      const card = document.createElement('div');
+      card.className = 'player-card';
+      if (sel) card.classList.add('selected');
+      if (isFull && !sel) card.classList.add('full-roster');
+
+      card.innerHTML = `
+        <img src="${player.img}" alt="${player.name}" />
+        <div class="player-info">
+          <div class="player-name">${player.name}</div>
+          <div class="player-team">${player.team}</div>
+        </div>
+        <div class="check-badge">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="card-actions">
+          <button class="action-btn favorites-btn" data-action="favorites" title="Add to Favorites">
+            <svg viewBox="0 0 24 24" fill="${sel ? 'var(--court-tan)' : 'none'}" stroke="currentColor">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+          <button class="action-btn log-btn" data-action="log" title="Add to Watch Log">
+            <svg viewBox="0 0 24 24" fill="${inLog ? 'var(--court-tan)' : 'none'}" stroke="currentColor">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      // Favorites button
+      const favBtn = card.querySelector('[data-action="favorites"]');
+      favBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (sel) removeById(player.id);
+        else if (!isFull) addToRoster(player.id);
+      });
+
+      // Log button
+      const logBtn = card.querySelector('[data-action="log"]');
+      logBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (inLog) {
+          const idx = watchLog.indexOf(player.id);
+          watchLog.splice(idx, 1);
+        } else {
+          watchLog.push(player.id);
+        }
+        renderWatchLog();
+        renderPlayerGrid();
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  // update pips & counter
+  const count = selectedCount();
+  for (let i = 0; i < 5; i++) {
+    document.getElementById(`pip${i}`).classList.toggle('active', i < count);
+  }
+  document.getElementById('counterText').textContent = `${count} / 5 selected`;
+
+  // search hint
+  const hint = document.getElementById('searchHint');
+  if (searchQuery) {
+    hint.textContent = `${results.length} player${results.length !== 1 ? 's' : ''} found`;
+  } else {
+    hint.textContent = `Showing all ${PLAYERS.length} players — type to filter`;
+  }
+}
+
+/* ── ACTIONS ── */
+function addToRoster(id) {
+  const emptyIndex = roster.indexOf(null);
+  if (emptyIndex === -1) return;
+  roster[emptyIndex] = id;
+  animateSlot(emptyIndex);
+  renderViewingBox();
+  renderPlayerGrid();
+}
+
+function removeById(id) {
+  const index = roster.indexOf(id);
+  if (index !== -1) {
+    roster[index] = null;
+    const compact = roster.filter(Boolean);
+    while (compact.length < 5) compact.push(null);
+    roster = compact;
+    renderViewingBox();
+    renderPlayerGrid();
+  }
+}
+
+function removeFromRoster(slotIndex) {
+  roster[slotIndex] = null;
+  delete playerNotes[slotIndex]; // Clear notes for removed player
+  
+  const compact = roster.filter(Boolean);
+  const compactNotes = {};
+  
+  // Rebuild notes object for compacted roster
+  let newIndex = 0;
+  roster.forEach((playerId, oldIndex) => {
+    if (playerId) {
+      if (playerNotes[oldIndex]) {
+        compactNotes[newIndex] = playerNotes[oldIndex];
+      }
+      newIndex++;
+    }
+  });
+  
+  while (compact.length < 5) compact.push(null);
+  roster = compact;
+  playerNotes = compactNotes;
+  
+  renderViewingBox();
+  renderPlayerGrid();
+}
+
+function animateSlot(index) {
+  const slots = document.querySelectorAll('.viewing-slot');
+  if (slots[index]) {
+    slots[index].classList.add('pop');
+    setTimeout(() => slots[index].classList.remove('pop'), 300);
+  }
+}
+
+/* ── SEARCH ── */
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  renderPlayerGrid();
+});
+
+/* ── TEAM TABS ── */
+document.querySelectorAll('.team-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const teamName = tab.dataset.team;
+    
+    // Update active tab
+    document.querySelectorAll('.team-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    
+    // Update active panel
+    document.querySelectorAll('.team-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`${teamName}-panel`).classList.add('active');
+  });
+});
+
+/* ── NOTES MODAL ── */
+let currentNotesSlot = null;
+
+function openNotesModal(slotIndex, playerName) {
+  currentNotesSlot = slotIndex;
+  const modal = document.getElementById('notesModal');
+  const textarea = document.getElementById('notesTextarea');
+  const title = document.getElementById('notesPlayerName');
+  
+  title.textContent = `${playerName} Notes`;
+  textarea.value = playerNotes[slotIndex] || '';
+  modal.classList.add('active');
+  textarea.focus();
+}
+
+function closeNotesModal() {
+  const modal = document.getElementById('notesModal');
+  const textarea = document.getElementById('notesTextarea');
+  
+  if (currentNotesSlot !== null) {
+    playerNotes[currentNotesSlot] = textarea.value;
+    renderViewingBox(); // Re-render to update icon state
+  }
+  
+  modal.classList.remove('active');
+  currentNotesSlot = null;
+}
+
+document.getElementById('notesClose').addEventListener('click', closeNotesModal);
+
+document.getElementById('notesModal').addEventListener('click', (e) => {
+  if (e.target.id === 'notesModal') {
+    closeNotesModal();
+  }
+});
+
+// Save notes as user types
+document.getElementById('notesTextarea').addEventListener('input', (e) => {
+  if (currentNotesSlot !== null) {
+    playerNotes[currentNotesSlot] = e.target.value;
+  }
+});
+
+renderViewingBox();
+renderPlayerGrid();
+renderWatchLog();
+renderTeams();
+</script>
+</body>
+</html>
